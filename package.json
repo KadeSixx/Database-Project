@@ -3,11 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "serve public -l 3000",
-    "build": "echo \"Static site - no build step required\"",
-    "start": "serve public -l 3000"
+    "dev": "node --watch server.js",
+    "build": "node --check server.js",
+    "start": "node server.js",
+    "test": "node --test"
   },
-  "devDependencies": {
-    "serve": "^14.2.6"
+  "engines": {
+    "node": ">=22.5.0"
   }
 }

@@ -6,6 +6,7 @@
   <meta name="description" content="FitCore Gym Membership Management System - manage members, employees, trainers, classes, enrollments and payments." />
   <title>Dashboard | FitCore Gym Management System</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="app.js" defer></script>
 </head>
 <body>
   <header class="site-header">
@@ -39,19 +40,19 @@
 
     <section class="stat-grid" aria-label="Overview statistics">
       <div class="stat-card">
-        <div class="stat-value">248</div>
+        <div class="stat-value" data-stat="members">—</div>
         <div class="stat-label">Active Members</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">18</div>
+        <div class="stat-value" data-stat="employees">—</div>
         <div class="stat-label">Employees</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">32</div>
+        <div class="stat-value" data-stat="classes">—</div>
         <div class="stat-label">Weekly Classes</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">$12.4k</div>
+        <div class="stat-value" data-stat="revenue">—</div>
         <div class="stat-label">Monthly Revenue</div>
       </div>
     </section>
@@ -109,6 +110,10 @@
       <a class="link-card" href="task-c-data.html">
         <h3>Task C Data</h3>
         <p>Explore the SQL records imported from the Phase 3 report.</p>
+      </a>
+      <a class="link-card" href="records.html">
+        <h3>Manage Database</h3>
+        <p>Run live queries and update or delete database records.</p>
       </a>
     </div>
   </main>

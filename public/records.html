@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Manage live FitCore database records." />
+  <title>Database Records | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><span class="logo-mark">FC</span>FitCore Gym Management</a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a><a href="members.html">Members</a>
+        <a href="employees.html">Employees</a><a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html">Plans</a><a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a><a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+  <main>
+    <h1 class="page-title">Database Records</h1>
+    <p class="page-subtitle">Live query results with update and delete controls.</p>
+    <nav class="data-jump record-tabs" aria-label="Database tables">
+      <button data-entity-link="members">Members</button>
+      <button data-entity-link="employees">Employees</button>
+      <button data-entity-link="trainers">Trainers</button>
+      <button data-entity-link="plans">Plans</button>
+      <button data-entity-link="classes">Classes</button>
+      <button data-entity-link="enrollments">Enrollments</button>
+      <button data-entity-link="payments">Payments</button>
+    </nav>
+    <section class="card" data-records>
+      <div class="card-header"><h2 data-record-title>Members</h2><p data-count>Loading…</p></div>
+      <div class="table-wrapper"><table><thead></thead><tbody></tbody></table></div>
+    </section>
+  </main>
+
+  <dialog id="record-editor" class="record-dialog">
+    <form method="dialog">
+      <div class="dialog-heading">
+        <h2>Edit Record</h2>
+        <button type="button" class="dialog-close" data-close-dialog aria-label="Close">&times;</button>
+      </div>
+      <div class="form-grid" data-edit-fields></div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+        <button type="button" class="btn btn-secondary" data-close-dialog>Cancel</button>
+      </div>
+    </form>
+  </dialog>
+  <footer class="site-footer"><div class="footer-container">
+    <span>&copy; 2026 FitCore Gym Management System</span>
+    <span>Live CRUD database workspace</span>
+  </div></footer>
+</body>
+</html>
