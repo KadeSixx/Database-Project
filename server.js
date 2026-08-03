@@ -3,17 +3,37 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { DatabaseSync } = require("node:sqlite");
 
+const envFile = path.join(__dirname, ".env.local");
+if (fs.existsSync(envFile)) process.loadEnvFile(envFile);
+
 const PORT = Number(process.env.PORT || 3000);
 const PUBLIC_DIR = path.join(__dirname, "public");
 const DATA_DIR = process.env.DATA_DIR
   ? path.resolve(process.env.DATA_DIR)
   : path.join(__dirname, "data");
-fs.mkdirSync(DATA_DIR, { recursive: true });
+const useMysql = process.env.DB_ENGINE === "mysql" && !process.env.DATA_DIR;
+let db;
+let pool;
 
-const db = new DatabaseSync(path.join(DATA_DIR, "gym.db"));
-db.exec("PRAGMA foreign_keys = ON");
+if (useMysql) {
+  const mysql = require("mysql2/promise");
+  pool = mysql.createPool({
+    host: process.env.DB_HOST || "127.0.0.1",
+    port: Number(process.env.DB_PORT || 3306),
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME || "gym_db",
+    waitForConnections: true,
+    connectionLimit: 10,
+    dateStrings: true,
+    decimalNumbers: true,
+  });
+} else {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  db = new DatabaseSync(path.join(DATA_DIR, "gym.db"));
+  db.exec("PRAGMA foreign_keys = ON");
 
-db.exec(`
+  db.exec(`
   CREATE TABLE IF NOT EXISTS membership_plans (
     plan_id TEXT PRIMARY KEY, plan_name TEXT NOT NULL UNIQUE,
     monthly_cost REAL NOT NULL CHECK(monthly_cost >= 0),
@@ -60,7 +80,7 @@ db.exec(`
     amount REAL NOT NULL CHECK(amount > 0), payment_method TEXT NOT NULL,
     payment_status TEXT NOT NULL CHECK(payment_status IN ('Paid','Pending','Failed'))
   );
-`);
+  `);
 
 function seed(table, columns, rows) {
   const placeholders = columns.map(() => "?").join(",");
@@ -70,51 +90,77 @@ function seed(table, columns, rows) {
   for (const row of rows) statement.run(...row);
 }
 
-seed("membership_plans", ["plan_id", "plan_name", "monthly_cost", "duration_days", "benefits"], [
+  seed("membership_plans", ["plan_id", "plan_name", "monthly_cost", "duration_days", "benefits"], [
   ["P-03", "Gold Tier", 30, 31, "Free Classes, Showers, T-Shirt"],
 ]);
-seed("members", ["member_id", "first_name", "last_name", "phone", "email", "join_date", "plan_id"], [
+  seed("members", ["member_id", "first_name", "last_name", "phone", "email", "join_date", "plan_id"], [
   ["M-46", "Jeff", "Emmerich", "8846514059", "Mable_Bartell19@hotmail.com", "2025-04-08", "P-03"],
   ["M-22", "Courtney", "O'Hara-Homenick", "7682641302", "Bruce_Price78@gmail.com", "2025-03-17", "P-03"],
   ["M-47", "Jared", "Bartoletti", "9629238795", "Nicole.Grant@gmail.com", "2024-12-03", "P-03"],
   ["M-49", "Katrina", "Dibbert", "5589920933", "Donnie_Lebsack@hotmail.com", "2025-09-10", "P-03"],
   ["M-33", "Ada", "Hodkiewicz", "5057881598", "Clyde_Davis63@gmail.com", "2024-12-27", "P-03"],
 ]);
-seed("employees", ["employee_id", "first_name", "last_name", "phone", "email", "address", "salary"], [
+  seed("employees", ["employee_id", "first_name", "last_name", "phone", "email", "address", "salary"], [
   ["E-18", "Kelly", "Monahan", "5023488005", "Wayne_Okuneva@gmail.com", "386 Rodriguez Club", 67992],
   ["E-37", "Corey", "Parker", "1955626099", "Frances.Miller@yahoo.com", "4159 Ottis Light", 82564],
   ["E-03", "Yolanda", "Carter", "1476691968", "Isaac.Paucek21@hotmail.com", "383 Dayne Groves", 67078],
   ["E-49", "Vivian", "Berge", "6605909521", "Virginia.Macejkovic73@hotmail.com", "161 Stoltenberg Center", 98014],
   ["E-30", "Jeanette", "Turcotte", "7748166525", "Randal_Hirthe35@hotmail.com", "574 W Washington Street", 60219],
 ]);
-seed("trainers", ["employee_id", "join_date", "specialization", "certification"], [
+  seed("trainers", ["employee_id", "join_date", "specialization", "certification"], [
   ["E-18", "2026-02-03", "General Fitness", "National Gym Certification"],
   ["E-37", "2026-03-15", "Strength Training", "National Gym Certification"],
   ["E-03", "2026-04-19", "Mobility", "National Gym Certification"],
   ["E-49", "2024-11-06", "Cardio", "National Gym Certification"],
   ["E-30", "2025-02-16", "Conditioning", "National Gym Certification"],
 ]);
-seed("classes", ["class_id", "trainer_id", "class_name", "class_time", "capacity", "room_location"], [
+  seed("classes", ["class_id", "trainer_id", "class_name", "class_time", "capacity", "room_location"], [
   ["C-738", "E-18", "Ivory", "07:30", 22, "Room 738"],
   ["C-156", "E-18", "Magenta", "09:00", 31, "Room 156"],
   ["C-642", "E-37", "Azure", "11:30", 26, "Room 642"],
   ["C-729", "E-49", "Violet", "17:30", 37, "Room 729"],
   ["C-722", "E-30", "Maroon", "19:00", 12, "Room 722"],
 ]);
-seed("enrollments", ["enrollment_id", "member_id", "class_id", "enrollment_date", "attendance_status"], [
+  seed("enrollments", ["enrollment_id", "member_id", "class_id", "enrollment_date", "attendance_status"], [
   ["EN-34A", "M-46", "C-738", "2026-08-27", "Excused"],
   ["EN-44", "M-22", "C-156", "2026-02-18", "Present"],
   ["EN-34B", "M-47", "C-642", "2026-10-03", "Excused"],
   ["EN-11", "M-49", "C-729", "2026-07-18", "Present"],
   ["EN-50", "M-33", "C-722", "2026-03-01", "Absent"],
 ]);
-seed("payments", ["payment_id", "member_id", "amount", "payment_method", "payment_status"], [
+  seed("payments", ["payment_id", "member_id", "amount", "payment_method", "payment_status"], [
   ["PAY-19-12", "M-46", 15, "Visa", "Paid"],
   ["PAY-15-13", "M-22", 35, "Mastercard", "Paid"],
   ["PAY-15-10", "M-47", 83, "Diners Club", "Paid"],
   ["PAY-14-07", "M-49", 11, "Discover", "Paid"],
   ["PAY-41-12", "M-33", 60, "Maestro", "Paid"],
-]);
+  ]);
+}
+
+async function dbAll(sql, params = []) {
+  if (useMysql) {
+    const [rows] = await pool.execute(sql, params);
+    return rows;
+  }
+  return db.prepare(sql).all(...params);
+}
+
+async function dbGet(sql, params = []) {
+  const rows = await dbAll(sql, params);
+  return rows[0];
+}
+
+async function dbRun(sql, params = []) {
+  if (useMysql) {
+    const [result] = await pool.execute(sql, params);
+    return { changes: result.affectedRows, insertId: result.insertId };
+  }
+  return db.prepare(sql).run(...params);
+}
+
+const fullName = (alias) => useMysql
+  ? `CONCAT(${alias}.first_name, ' ', ${alias}.last_name)`
+  : `${alias}.first_name || ' ' || ${alias}.last_name`;
 
 const entities = {
   plans: {
@@ -138,21 +184,21 @@ const entities = {
     table: "trainers", id: "employee_id",
     fields: ["employee_id", "join_date", "specialization", "certification"],
     required: ["employee_id", "join_date", "specialization", "certification"],
-    list: `SELECT t.*, e.first_name || ' ' || e.last_name AS employee_name
+    list: `SELECT t.*, ${fullName("e")} AS employee_name
       FROM trainers t JOIN employees e ON e.employee_id=t.employee_id ORDER BY t.employee_id`,
   },
   classes: {
     table: "classes", id: "class_id",
     fields: ["class_id", "trainer_id", "class_name", "class_time", "capacity", "room_location"],
     required: ["class_id", "trainer_id", "class_name", "class_time", "capacity", "room_location"],
-    list: `SELECT c.*, e.first_name || ' ' || e.last_name AS trainer_name
+    list: `SELECT c.*, ${fullName("e")} AS trainer_name
       FROM classes c JOIN employees e ON e.employee_id=c.trainer_id ORDER BY c.class_id`,
   },
   enrollments: {
     table: "enrollments", id: "enrollment_id",
     fields: ["enrollment_id", "member_id", "class_id", "enrollment_date", "attendance_status"],
     required: ["enrollment_id", "member_id", "class_id", "enrollment_date", "attendance_status"],
-    list: `SELECT x.*, m.first_name || ' ' || m.last_name AS member_name, c.class_name
+    list: `SELECT x.*, ${fullName("m")} AS member_name, c.class_name
       FROM enrollments x JOIN members m ON m.member_id=x.member_id
       JOIN classes c ON c.class_id=x.class_id ORDER BY x.enrollment_id`,
   },
@@ -160,7 +206,7 @@ const entities = {
     table: "payments", id: "payment_id",
     fields: ["payment_id", "member_id", "amount", "payment_method", "payment_status"],
     required: ["payment_id", "member_id", "amount", "payment_method", "payment_status"],
-    list: `SELECT p.*, m.first_name || ' ' || m.last_name AS member_name
+    list: `SELECT p.*, ${fullName("m")} AS member_name
       FROM payments p JOIN members m ON m.member_id=p.member_id ORDER BY p.payment_id`,
   },
 };
@@ -241,11 +287,11 @@ async function api(req, res, url) {
   if (url.pathname === "/api/dashboard" && req.method === "GET") {
     const result = {};
     for (const [name, config] of Object.entries(entities)) {
-      result[name] = db.prepare(`SELECT COUNT(*) AS count FROM ${config.table}`).get().count;
+      result[name] = (await dbGet(`SELECT COUNT(*) AS count FROM ${config.table}`)).count;
     }
-    result.revenue = db.prepare(
+    result.revenue = (await dbGet(
       "SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE payment_status='Paid'"
-    ).get().total;
+    )).total;
     return json(res, 200, result);
   }
 
@@ -258,12 +304,12 @@ async function api(req, res, url) {
   try {
     if (req.method === "GET") {
       if (id) {
-        const record = db.prepare(
-          `SELECT * FROM ${config.table} WHERE ${config.id}=?`
-        ).get(id);
+        const record = await dbGet(
+          `SELECT * FROM ${config.table} WHERE ${config.id}=?`, [id]
+        );
         return record ? json(res, 200, record) : json(res, 404, { error: "Record not found." });
       }
-      return json(res, 200, db.prepare(config.list || `SELECT * FROM ${config.table}`).all());
+      return json(res, 200, await dbAll(config.list || `SELECT * FROM ${config.table}`));
     }
 
     if (req.method === "POST" || req.method === "PUT") {
@@ -273,17 +319,19 @@ async function api(req, res, url) {
 
       if (req.method === "POST") {
         const fields = config.fields;
-        db.prepare(
-          `INSERT INTO ${config.table} (${fields.join(",")}) VALUES (${fields.map(() => "?").join(",")})`
-        ).run(...fields.map((field) => value[field]));
+        await dbRun(
+          `INSERT INTO ${config.table} (${fields.join(",")}) VALUES (${fields.map(() => "?").join(",")})`,
+          fields.map((field) => value[field])
+        );
         return json(res, 201, { message: "Record created.", id: value[config.id] });
       }
 
       if (!id) return json(res, 400, { error: "Record ID is required." });
       const fields = config.fields.filter((field) => field !== config.id);
-      const result = db.prepare(
-        `UPDATE ${config.table} SET ${fields.map((field) => `${field}=?`).join(",")} WHERE ${config.id}=?`
-      ).run(...fields.map((field) => value[field]), id);
+      const result = await dbRun(
+        `UPDATE ${config.table} SET ${fields.map((field) => `${field}=?`).join(",")} WHERE ${config.id}=?`,
+        [...fields.map((field) => value[field]), id]
+      );
       return result.changes
         ? json(res, 200, { message: "Record updated.", id })
         : json(res, 404, { error: "Record not found." });
@@ -291,9 +339,9 @@ async function api(req, res, url) {
 
     if (req.method === "DELETE") {
       if (!id) return json(res, 400, { error: "Record ID is required." });
-      const result = db.prepare(
-        `DELETE FROM ${config.table} WHERE ${config.id}=?`
-      ).run(id);
+      const result = await dbRun(
+        `DELETE FROM ${config.table} WHERE ${config.id}=?`, [id]
+      );
       return result.changes
         ? json(res, 200, { message: "Record deleted." })
         : json(res, 404, { error: "Record not found." });
@@ -336,10 +384,28 @@ function staticFile(req, res, url) {
 
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
-  if (url.pathname.startsWith("/api/")) return api(req, res, url);
+  if (url.pathname.startsWith("/api/")) {
+    try {
+      return await api(req, res, url);
+    } catch (error) {
+      return json(res, 503, {
+        error: "The database is temporarily unavailable.",
+        detail: error.message,
+      });
+    }
+  }
   staticFile(req, res, url);
 });
 
-server.listen(PORT, () => {
-  console.log(`FitCore is running at http://localhost:${PORT}`);
+async function start() {
+  if (useMysql) await pool.query("SELECT 1");
+  server.listen(PORT, () => {
+    console.log(`FitCore is running at http://localhost:${PORT}`);
+    console.log(`Database engine: ${useMysql ? "MySQL" : "embedded SQLite"}`);
+  });
+}
+
+start().catch((error) => {
+  console.error(`Unable to start FitCore: ${error.message}`);
+  process.exitCode = 1;
 });

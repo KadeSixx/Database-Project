@@ -2,7 +2,7 @@
 
 A database-backed website for a university database systems project. It includes validated forms, live report views, and complete create, read, update, and delete controls for members, employees, trainers, membership plans, classes, enrollments, and payments.
 
-The schema and sample data were reconstructed from the **Task C** report and corrected so that primary keys, foreign keys, data types, and relationships are consistent. The runnable website uses Node's embedded SQLite database, so no separate database installation is needed. Corrected MySQL scripts are also included for submission or deployment to MySQL 8+.
+The schema and sample data were reconstructed from the **Task C** report and corrected so that primary keys, foreign keys, data types, and relationships are consistent. The website supports MySQL 8+ and an embedded SQLite fallback, so teammates can run it even when MySQL is unavailable.
 
 ## Run locally
 
@@ -11,7 +11,7 @@ The schema and sample data were reconstructed from the **Task C** report and cor
 3. Run `npm start`.
 4. Open `http://localhost:3000`.
 
-The embedded database is created automatically in `data/gym.db` on first launch.
+Without `.env.local`, the embedded database is created automatically in `data/gym.db`. When `.env.local` contains the MySQL settings shown in `.env.example`, the same API and frontend use MySQL instead.
 
 ## Test
 
@@ -22,6 +22,8 @@ Run `npm test` to verify seeded queries, validation, and all four CRUD operation
 1. Sign in to a MySQL 8+ server.
 2. Run `database/create.sql`.
 3. Run `database/load.sql`.
+4. Create a least-privilege application user with `SELECT`, `INSERT`, `UPDATE`, and `DELETE` access to `gym_db`.
+5. Copy `.env.example` to `.env.local` and enter that user's local credentials.
 
 ## Project contents
 
