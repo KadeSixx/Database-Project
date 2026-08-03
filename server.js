@@ -270,7 +270,10 @@ function validate(config, value) {
 }
 
 function json(res, status, body) {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
   res.end(JSON.stringify(body));
 }
 
@@ -377,7 +380,11 @@ function staticFile(req, res, url) {
       res.writeHead(error.code === "ENOENT" ? 404 : 500);
       return res.end(error.code === "ENOENT" ? "Not found" : "Server error");
     }
-    res.writeHead(200, { "Content-Type": mimeTypes[path.extname(file)] || "application/octet-stream" });
+    const extension = path.extname(file);
+    res.writeHead(200, {
+      "Content-Type": mimeTypes[extension] || "application/octet-stream",
+      "Cache-Control": extension === ".html" || extension === ".js" ? "no-store" : "public, max-age=3600",
+    });
     res.end(content);
   });
 }

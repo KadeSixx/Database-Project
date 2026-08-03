@@ -131,17 +131,23 @@ async function prepareForm() {
     showFieldErrors(form, {});
     if (!form.reportValidity()) return;
     const submit = form.querySelector('[type="submit"]');
+    const originalLabel = submit.textContent;
     submit.disabled = true;
+    submit.textContent = "Saving…";
     try {
       const body = Object.fromEntries(new FormData(form).entries());
       await request(`/api/${entity}`, { method: "POST", body: JSON.stringify(body) });
-      feedback(form, "Record saved successfully.", "success");
+      feedback(form, "Record saved successfully. Opening the live database records…", "success");
       form.reset();
+      window.setTimeout(() => {
+        location.assign(`/records.html?entity=${encodeURIComponent(entity)}&saved=1`);
+      }, 650);
     } catch (error) {
       showFieldErrors(form, error.fields);
       feedback(form, error.detail ? `${error.message} ${error.detail}` : error.message, "error");
     } finally {
       submit.disabled = false;
+      submit.textContent = originalLabel;
     }
   });
 }
@@ -247,6 +253,14 @@ async function prepareRecords() {
   if (!root) return;
   const initial = new URLSearchParams(location.search).get("entity");
   await loadRecords(definitions[initial] ? initial : "members");
+  if (new URLSearchParams(location.search).get("saved") === "1") {
+    const notice = document.createElement("div");
+    notice.className = "import-notice success-notice";
+    notice.setAttribute("role", "status");
+    notice.innerHTML = "<strong>Record saved</strong><p>The table below is displaying the updated database.</p>";
+    root.before(notice);
+    history.replaceState({}, "", `/records.html?entity=${encodeURIComponent(activeEntity)}`);
+  }
   document.querySelectorAll("[data-entity-link]").forEach((link) => {
     link.addEventListener("click", () => loadRecords(link.dataset.entityLink));
   });
