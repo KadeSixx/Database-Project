@@ -76,7 +76,7 @@ if (useMysql) {
   CREATE TABLE IF NOT EXISTS payments (
     payment_id TEXT PRIMARY KEY,
     member_id TEXT NOT NULL REFERENCES members(member_id)
-      ON UPDATE CASCADE ON DELETE RESTRICT,
+      ON UPDATE CASCADE ON DELETE CASCADE,
     amount REAL NOT NULL CHECK(amount > 0), payment_method TEXT NOT NULL,
     payment_status TEXT NOT NULL CHECK(payment_status IN ('Paid','Pending','Failed'))
   );

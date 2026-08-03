@@ -81,3 +81,25 @@ test("rejects invalid input with field-level errors", async () => {
   assert.equal(body.fields.email, "Enter a valid email address.");
   assert.ok(body.fields.first_name);
 });
+
+test("deleting a member also removes dependent payments", async () => {
+  const member = {
+    member_id: "M-CASCADE", first_name: "Cascade", last_name: "Test",
+    phone: "5551234000", email: "cascade@example.com",
+    join_date: "2026-08-03", plan_id: "P-03",
+  };
+  assert.equal((await fetch(`${base}/api/members`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(member),
+  })).status, 201);
+  assert.equal((await fetch(`${base}/api/payments`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      payment_id: "PAY-CASCADE", member_id: "M-CASCADE",
+      amount: 30, payment_method: "Visa", payment_status: "Paid",
+    }),
+  })).status, 201);
+
+  assert.equal((await fetch(`${base}/api/members/M-CASCADE`, { method: "DELETE" })).status, 200);
+  assert.equal((await fetch(`${base}/api/payments/PAY-CASCADE`)).status, 404);
+});
