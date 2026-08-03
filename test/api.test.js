@@ -40,6 +40,7 @@ test("serves the dashboard and seeded Task C data", async () => {
   const page = await fetch(`${base}/`);
   assert.equal(page.status, 200);
   const dashboard = await (await fetch(`${base}/api/dashboard`)).json();
+  assert.equal(dashboard.plans, 5);
   assert.equal(dashboard.members, 5);
   assert.equal(dashboard.classes, 5);
 });
@@ -80,4 +81,40 @@ test("rejects invalid input with field-level errors", async () => {
   assert.equal(body.error, "Validation failed.");
   assert.equal(body.fields.email, "Enter a valid email address.");
   assert.ok(body.fields.first_name);
+});
+
+test("identifies duplicate member IDs", async () => {
+  const response = await fetch(`${base}/api/members`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      member_id: "M-46", first_name: "Duplicate", last_name: "Member",
+      phone: "5551234001", email: "unique-duplicate-test@example.com",
+      join_date: "2026-08-03", plan_id: "P-03",
+    }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 409);
+  assert.equal(body.fields.member_id, "That Member ID already exists.");
+});
+
+test("deleting a member also removes dependent payments", async () => {
+  const member = {
+    member_id: "M-CASCADE", first_name: "Cascade", last_name: "Test",
+    phone: "5551234000", email: "cascade@example.com",
+    join_date: "2026-08-03", plan_id: "P-03",
+  };
+  assert.equal((await fetch(`${base}/api/members`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(member),
+  })).status, 201);
+  assert.equal((await fetch(`${base}/api/payments`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      payment_id: "PAY-CASCADE", member_id: "M-CASCADE",
+      amount: 30, payment_method: "Visa", payment_status: "Paid",
+    }),
+  })).status, 201);
+
+  assert.equal((await fetch(`${base}/api/members/M-CASCADE`, { method: "DELETE" })).status, 200);
+  assert.equal((await fetch(`${base}/api/payments/PAY-CASCADE`)).status, 404);
 });

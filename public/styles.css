@@ -470,6 +470,13 @@ tbody tr:last-child td {
   margin: 0.3rem 0 0;
 }
 
+.success-notice {
+  border-color: #86efac;
+  border-left-color: var(--green-600);
+  background: #dcfce7;
+  color: #166534;
+}
+
 .data-jump {
   display: flex;
   flex-wrap: wrap;

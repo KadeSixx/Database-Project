@@ -76,7 +76,7 @@ if (useMysql) {
   CREATE TABLE IF NOT EXISTS payments (
     payment_id TEXT PRIMARY KEY,
     member_id TEXT NOT NULL REFERENCES members(member_id)
-      ON UPDATE CASCADE ON DELETE RESTRICT,
+      ON UPDATE CASCADE ON DELETE CASCADE,
     amount REAL NOT NULL CHECK(amount > 0), payment_method TEXT NOT NULL,
     payment_status TEXT NOT NULL CHECK(payment_status IN ('Paid','Pending','Failed'))
   );
@@ -91,7 +91,11 @@ function seed(table, columns, rows) {
 }
 
   seed("membership_plans", ["plan_id", "plan_name", "monthly_cost", "duration_days", "benefits"], [
+  ["P-01", "Basic", 29, 31, "Gym floor and locker room access"],
+  ["P-02", "Standard", 49, 31, "Gym access and unlimited group classes"],
   ["P-03", "Gold Tier", 30, 31, "Free Classes, Showers, T-Shirt"],
+  ["P-04", "Premium", 79, 31, "Unlimited classes, sauna access, and one trainer session"],
+  ["P-05", "Annual", 499, 365, "Full-year gym and group class access"],
 ]);
   seed("members", ["member_id", "first_name", "last_name", "phone", "email", "join_date", "plan_id"], [
   ["M-46", "Jeff", "Emmerich", "8846514059", "Mable_Bartell19@hotmail.com", "2025-04-08", "P-03"],
@@ -270,7 +274,10 @@ function validate(config, value) {
 }
 
 function json(res, status, body) {
-  res.writeHead(status, { "Content-Type": "application/json; charset=utf-8" });
+  res.writeHead(status, {
+    "Content-Type": "application/json; charset=utf-8",
+    "Cache-Control": "no-store",
+  });
   res.end(JSON.stringify(body));
 }
 
@@ -349,6 +356,29 @@ async function api(req, res, url) {
 
     return json(res, 405, { error: "Method not allowed." });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || /UNIQUE constraint failed/i.test(error.message)) {
+      const message = `${error.message} ${error.sqlMessage || ""}`;
+      let field = config.id;
+      if (/email/i.test(message)) field = "email";
+      else if (/plan_name/i.test(message)) field = "plan_name";
+      else if (/member_id.*class_id|uq_member_class/i.test(message)) field = "member_id";
+      const labels = {
+        email: "That email address is already in use.",
+        plan_name: "That plan name already exists.",
+        member_id: entity === "enrollments"
+          ? "That member is already enrolled in this class."
+          : "That Member ID already exists.",
+        employee_id: "That Employee ID already exists.",
+        class_id: "That Class ID already exists.",
+        enrollment_id: "That Enrollment ID already exists.",
+        payment_id: "That Payment ID already exists.",
+        plan_id: "That Plan ID already exists.",
+      };
+      return json(res, 409, {
+        error: "Please correct the highlighted field.",
+        fields: { [field]: labels[field] || "That value already exists." },
+      });
+    }
     const conflict = /UNIQUE|FOREIGN KEY|CHECK constraint/i.test(error.message);
     return json(res, conflict ? 409 : 500, {
       error: conflict
@@ -377,7 +407,11 @@ function staticFile(req, res, url) {
       res.writeHead(error.code === "ENOENT" ? 404 : 500);
       return res.end(error.code === "ENOENT" ? "Not found" : "Server error");
     }
-    res.writeHead(200, { "Content-Type": mimeTypes[path.extname(file)] || "application/octet-stream" });
+    const extension = path.extname(file);
+    res.writeHead(200, {
+      "Content-Type": mimeTypes[extension] || "application/octet-stream",
+      "Cache-Control": extension === ".html" || extension === ".js" ? "no-store" : "public, max-age=3600",
+    });
     res.end(content);
   });
 }

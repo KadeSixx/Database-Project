@@ -90,5 +90,5 @@ CREATE TABLE payments (
   CONSTRAINT chk_payment_amount CHECK (amount > 0),
   CONSTRAINT fk_payment_member FOREIGN KEY (member_id)
     REFERENCES members(member_id)
-    ON UPDATE CASCADE ON DELETE RESTRICT
+    ON UPDATE CASCADE ON DELETE CASCADE
 );
