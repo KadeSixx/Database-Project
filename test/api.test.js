@@ -82,6 +82,20 @@ test("rejects invalid input with field-level errors", async () => {
   assert.ok(body.fields.first_name);
 });
 
+test("identifies duplicate member IDs", async () => {
+  const response = await fetch(`${base}/api/members`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      member_id: "M-46", first_name: "Duplicate", last_name: "Member",
+      phone: "5551234001", email: "unique-duplicate-test@example.com",
+      join_date: "2026-08-03", plan_id: "P-03",
+    }),
+  });
+  const body = await response.json();
+  assert.equal(response.status, 409);
+  assert.equal(body.fields.member_id, "That Member ID already exists.");
+});
+
 test("deleting a member also removes dependent payments", async () => {
   const member = {
     member_id: "M-CASCADE", first_name: "Cascade", last_name: "Test",

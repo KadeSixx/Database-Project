@@ -352,6 +352,29 @@ async function api(req, res, url) {
 
     return json(res, 405, { error: "Method not allowed." });
   } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || /UNIQUE constraint failed/i.test(error.message)) {
+      const message = `${error.message} ${error.sqlMessage || ""}`;
+      let field = config.id;
+      if (/email/i.test(message)) field = "email";
+      else if (/plan_name/i.test(message)) field = "plan_name";
+      else if (/member_id.*class_id|uq_member_class/i.test(message)) field = "member_id";
+      const labels = {
+        email: "That email address is already in use.",
+        plan_name: "That plan name already exists.",
+        member_id: entity === "enrollments"
+          ? "That member is already enrolled in this class."
+          : "That Member ID already exists.",
+        employee_id: "That Employee ID already exists.",
+        class_id: "That Class ID already exists.",
+        enrollment_id: "That Enrollment ID already exists.",
+        payment_id: "That Payment ID already exists.",
+        plan_id: "That Plan ID already exists.",
+      };
+      return json(res, 409, {
+        error: "Please correct the highlighted field.",
+        fields: { [field]: labels[field] || "That value already exists." },
+      });
+    }
     const conflict = /UNIQUE|FOREIGN KEY|CHECK constraint/i.test(error.message);
     return json(res, conflict ? 409 : 500, {
       error: conflict

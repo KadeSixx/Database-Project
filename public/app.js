@@ -302,3 +302,10 @@ document.addEventListener("DOMContentLoaded", () => {
   loadLegacyReport();
   prepareRecords();
 });
+
+// Browsers may restore form pages from the back-forward cache without firing
+// DOMContentLoaded again. Reload those snapshots so database options and event
+// handlers always reconnect when navigating from the dashboard.
+window.addEventListener("pageshow", (event) => {
+  if (event.persisted) location.reload();
+});
