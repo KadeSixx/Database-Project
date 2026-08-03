@@ -4,7 +4,11 @@ USE gym_db;
 INSERT INTO membership_plans
   (plan_id, plan_name, monthly_cost, duration_days, benefits)
 VALUES
-  ('P-03', 'Gold Tier', 30.00, 31, 'Free Classes, Showers, T-Shirt');
+  ('P-01', 'Basic', 29.00, 31, 'Gym floor and locker room access'),
+  ('P-02', 'Standard', 49.00, 31, 'Gym access and unlimited group classes'),
+  ('P-03', 'Gold Tier', 30.00, 31, 'Free Classes, Showers, T-Shirt'),
+  ('P-04', 'Premium', 79.00, 31, 'Unlimited classes, sauna access, and one trainer session'),
+  ('P-05', 'Annual', 499.00, 365, 'Full-year gym and group class access');
 
 INSERT INTO members
   (member_id, first_name, last_name, phone, email, join_date, plan_id)

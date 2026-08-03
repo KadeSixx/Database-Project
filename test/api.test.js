@@ -40,6 +40,7 @@ test("serves the dashboard and seeded Task C data", async () => {
   const page = await fetch(`${base}/`);
   assert.equal(page.status, 200);
   const dashboard = await (await fetch(`${base}/api/dashboard`)).json();
+  assert.equal(dashboard.plans, 5);
   assert.equal(dashboard.members, 5);
   assert.equal(dashboard.classes, 5);
 });
