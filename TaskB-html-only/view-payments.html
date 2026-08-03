@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="View payment history and statuses." />
+  <title>View Payments | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="logo-mark">FC</span>
+        FitCore Gym Management
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html">Employees</a>
+        <a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html">Plans</a>
+        <a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">View Payments</h1>
+    <p class="page-subtitle">Payment history with methods and statuses. This is placeholder data to be replaced by a MySQL query.</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>All Payments</h2>
+        <p>Showing 5 of 512 records</p>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Payment ID</th>
+              <th>Member</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>PAY-9001</td>
+              <td>John Doe</td>
+              <td>$79.00</td>
+              <td>Credit Card</td>
+              <td><span class="badge badge-success">Paid</span></td>
+            </tr>
+            <tr>
+              <td>PAY-9002</td>
+              <td>Emily Clark</td>
+              <td>$49.00</td>
+              <td>Online</td>
+              <td><span class="badge badge-success">Paid</span></td>
+            </tr>
+            <tr>
+              <td>PAY-9003</td>
+              <td>Robert Lee</td>
+              <td>$29.00</td>
+              <td>Cash</td>
+              <td><span class="badge badge-pending">Pending</span></td>
+            </tr>
+            <tr>
+              <td>PAY-9004</td>
+              <td>Maria Garcia</td>
+              <td>$499.00</td>
+              <td>Debit Card</td>
+              <td><span class="badge badge-success">Paid</span></td>
+            </tr>
+            <tr>
+              <td>PAY-9005</td>
+              <td>James Wilson</td>
+              <td>$79.00</td>
+              <td>Online</td>
+              <td><span class="badge badge-danger">Failed</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System — University Database Systems Project</span>
+      <span><a href="payments.html">Record a payment &rarr;</a></span>
+    </div>
+  </footer>
+</body>
+</html>

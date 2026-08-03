@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Schedule a gym class with trainer, room, and capacity details." />
+  <title>Classes | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="logo-mark">FC</span>
+        FitCore Gym Management
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html">Employees</a>
+        <a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html">Plans</a>
+        <a href="classes.html" class="active">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Add New Class</h1>
+    <p class="page-subtitle">Schedule a class and assign a trainer, time slot, and room.</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Class Details</h2>
+        <p>Fields marked with an asterisk (*) are required.</p>
+      </div>
+      <form action="#" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="class-id">Class ID *</label>
+            <input type="text" id="class-id" name="class_id" placeholder="e.g. C-101" required />
+          </div>
+          <div class="form-group">
+            <label for="trainer">Trainer *</label>
+            <select id="trainer" name="trainer" required>
+              <option value="" disabled selected>Select a trainer</option>
+              <option value="E-2001">Jane Smith — Strength</option>
+              <option value="E-2002">Michael Johnson — Cardio</option>
+              <option value="E-2003">Sarah Williams — Yoga</option>
+              <option value="E-2004">David Brown — CrossFit</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="class-name">Class Name *</label>
+            <input type="text" id="class-name" name="class_name" placeholder="e.g. Morning Yoga Flow" required />
+          </div>
+          <div class="form-group">
+            <label for="class-time">Class Time *</label>
+            <input type="time" id="class-time" name="class_time" required />
+          </div>
+          <div class="form-group">
+            <label for="capacity">Capacity *</label>
+            <input type="number" id="capacity" name="capacity" min="1" placeholder="e.g. 20" required />
+          </div>
+          <div class="form-group">
+            <label for="room">Room Location *</label>
+            <input type="text" id="room" name="room_location" placeholder="e.g. Studio A" required />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System — University Database Systems Project</span>
+      <span><a href="view-classes.html">View all classes &rarr;</a></span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Record a member payment with method and status." />
+  <title>Payments | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="logo-mark">FC</span>
+        FitCore Gym Management
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html">Employees</a>
+        <a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html">Plans</a>
+        <a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html" class="active">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Record Payment</h1>
+    <p class="page-subtitle">Log a member payment, including the method and current status.</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Payment Details</h2>
+        <p>Fields marked with an asterisk (*) are required.</p>
+      </div>
+      <form action="#" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="payment-id">Payment ID *</label>
+            <input type="text" id="payment-id" name="payment_id" placeholder="e.g. PAY-9001" required />
+          </div>
+          <div class="form-group">
+            <label for="member">Member *</label>
+            <select id="member" name="member" required>
+              <option value="" disabled selected>Select a member</option>
+              <option value="M-1001">M-1001 — John Doe</option>
+              <option value="M-1002">M-1002 — Emily Clark</option>
+              <option value="M-1003">M-1003 — Robert Lee</option>
+              <option value="M-1004">M-1004 — Maria Garcia</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="amount">Amount *</label>
+            <input type="number" id="amount" name="amount" min="0" step="0.01" placeholder="e.g. 79.00" required />
+          </div>
+          <div class="form-group">
+            <label for="method">Payment Method *</label>
+            <select id="method" name="payment_method" required>
+              <option value="" disabled selected>Select method</option>
+              <option value="cash">Cash</option>
+              <option value="credit-card">Credit Card</option>
+              <option value="debit-card">Debit Card</option>
+              <option value="online">Online</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label for="status">Payment Status *</label>
+            <select id="status" name="payment_status" required>
+              <option value="" disabled selected>Select status</option>
+              <option value="paid">Paid</option>
+              <option value="pending">Pending</option>
+              <option value="failed">Failed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System — University Database Systems Project</span>
+      <span><a href="view-payments.html">View all payments &rarr;</a></span>
+    </div>
+  </footer>
+</body>
+</html>
