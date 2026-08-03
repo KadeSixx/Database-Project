@@ -498,6 +498,109 @@ tbody tr:last-child td {
   scroll-margin-top: 6rem;
 }
 
+.form-feedback {
+  margin: 0 1.5rem 1rem;
+  padding: 0.8rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.form-feedback.success {
+  color: #166534;
+  background: #dcfce7;
+  border: 1px solid #86efac;
+}
+
+.form-feedback.error {
+  color: #991b1b;
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--red-600);
+  font-size: 0.8rem;
+}
+
+.record-tabs button {
+  padding: 0.45rem 0.8rem;
+  border: 1px solid var(--gray-300);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--gray-700);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.record-tabs button:hover,
+.record-tabs button.active {
+  border-color: var(--blue-600);
+  color: var(--white);
+  background: var(--blue-600);
+}
+
+.table-actions {
+  display: flex;
+  gap: 0.75rem;
+  white-space: nowrap;
+}
+
+.btn-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--blue-700);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-link.danger {
+  color: var(--red-600);
+}
+
+.record-dialog {
+  width: min(760px, calc(100% - 2rem));
+  max-height: 90vh;
+  margin: auto;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+}
+
+.record-dialog::backdrop {
+  background: rgba(17, 24, 39, 0.55);
+}
+
+.record-dialog form {
+  padding: 1.5rem;
+  overflow-y: auto;
+}
+
+.record-dialog .form-feedback {
+  margin: 0 0 1rem;
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+}
+
+.dialog-close {
+  border: 0;
+  background: transparent;
+  color: var(--gray-600);
+  font-size: 1.75rem;
+  cursor: pointer;
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 900px) {
   .stat-grid {

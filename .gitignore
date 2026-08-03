@@ -19,3 +19,4 @@ server.stdout.log
 server.stderr.log
 tmp/
 .agents/
+data/
