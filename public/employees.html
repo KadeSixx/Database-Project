@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Add a new employee record in the FitCore Gym Management System." />
+  <title>Employees | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="logo-mark">FC</span>
+        FitCore Gym Management
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html" class="active">Employees</a>
+        <a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html">Plans</a>
+        <a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Add New Employee</h1>
+    <p class="page-subtitle">Register a staff member with their contact and salary information.</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Employee Details</h2>
+        <p>Fields marked with an asterisk (*) are required.</p>
+      </div>
+      <form action="#" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="employee-id">Employee ID *</label>
+            <input type="text" id="employee-id" name="employee_id" placeholder="e.g. E-2001" required />
+          </div>
+          <div class="form-group">
+            <label for="salary">Salary *</label>
+            <input type="number" id="salary" name="salary" min="0" step="0.01" placeholder="e.g. 3500.00" required />
+          </div>
+          <div class="form-group">
+            <label for="first-name">First Name *</label>
+            <input type="text" id="first-name" name="first_name" placeholder="Jane" required />
+          </div>
+          <div class="form-group">
+            <label for="last-name">Last Name *</label>
+            <input type="text" id="last-name" name="last_name" placeholder="Smith" required />
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone Number *</label>
+            <input type="tel" id="phone" name="phone" placeholder="+1 (555) 987-6543" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" placeholder="jane.smith@example.com" required />
+          </div>
+          <div class="form-group full">
+            <label for="address">Address *</label>
+            <textarea id="address" name="address" placeholder="123 Main St, Springfield, IL 62704" required></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System — University Database Systems Project</span>
+      <span>Built with semantic HTML5 &amp; CSS</span>
+    </div>
+  </footer>
+</body>
+</html>

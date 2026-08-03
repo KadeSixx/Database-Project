@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Register a trainer with specialization and certification details." />
+  <title>Trainers | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="logo-mark">FC</span>
+        FitCore Gym Management
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html">Employees</a>
+        <a href="trainers.html" class="active">Trainers</a>
+        <a href="membership-plans.html">Plans</a>
+        <a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Add New Trainer</h1>
+    <p class="page-subtitle">Assign an existing employee as a trainer and record their qualifications.</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Trainer Details</h2>
+        <p>Fields marked with an asterisk (*) are required.</p>
+      </div>
+      <form action="#" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="employee-id">Employee ID *</label>
+            <select id="employee-id" name="employee_id" required>
+              <option value="" disabled selected>Select an employee</option>
+              <option value="E-2001">E-2001 — Jane Smith</option>
+              <option value="E-2002">E-2002 — Michael Johnson</option>
+              <option value="E-2003">E-2003 — Sarah Williams</option>
+              <option value="E-2004">E-2004 — David Brown</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="join-date">Join Date *</label>
+            <input type="date" id="join-date" name="join_date" required />
+          </div>
+          <div class="form-group">
+            <label for="specialization">Specialization *</label>
+            <input type="text" id="specialization" name="specialization" placeholder="e.g. Strength &amp; Conditioning" required />
+          </div>
+          <div class="form-group">
+            <label for="certification">Certification *</label>
+            <input type="text" id="certification" name="certification" placeholder="e.g. NASM-CPT" required />
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System — University Database Systems Project</span>
+      <span><a href="view-trainers.html">View all trainers &rarr;</a></span>
+    </div>
+  </footer>
+</body>
+</html>

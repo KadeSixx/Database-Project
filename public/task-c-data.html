@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Preview database records supplied in the Task C Phase 3 report." />
+  <title>Task C Data | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand"><span class="logo-mark">FC</span>FitCore Gym Management</a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html">Employees</a>
+        <a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html">Plans</a>
+        <a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Task C Database Preview</h1>
+    <p class="page-subtitle">Sample records reconstructed from the submitted Phase 3 PDF.</p>
+
+    <div class="import-notice">
+      <strong>Imported report data</strong>
+      <p>This page connects the database work to the frontend for demonstration. These records remain static until a MySQL backend is connected.</p>
+    </div>
+
+    <nav class="data-jump" aria-label="Task C data tables">
+      <a href="#members-data">Members</a><a href="#employees-data">Employees</a>
+      <a href="#trainers-data">Trainers</a><a href="#classes-data">Classes</a>
+      <a href="#enrollments-data">Enrollments</a><a href="#plans-data">Plans</a>
+      <a href="#payments-data">Payments</a>
+    </nav>
+
+    <section class="card data-section" id="members-data">
+      <div class="card-header"><h2>Members</h2><p>5 sample records from the Member table</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>ID</th><th>First Name</th><th>Last Name</th><th>Phone</th><th>Email</th><th>Join Date</th><th>Plan</th></tr></thead>
+        <tbody>
+          <tr><td>46</td><td>Jeff</td><td>Emmerich</td><td>8846514059</td><td>Mable_Bartell19@hotmail.com</td><td>2025-04-08</td><td>Gold Tier</td></tr>
+          <tr><td>22</td><td>Courtney</td><td>O'Hara-Homenick</td><td>7682641302</td><td>Bruce_Price78@gmail.com</td><td>2025-03-17</td><td>Gold Tier</td></tr>
+          <tr><td>47</td><td>Jared</td><td>Bartoletti</td><td>9629238795</td><td>Nicole.Grant@gmail.com</td><td>2024-12-03</td><td>Gold Tier</td></tr>
+          <tr><td>49</td><td>Katrina</td><td>Dibbert</td><td>5589920933</td><td>Donnie_Lebsack@hotmail.com</td><td>2025-09-10</td><td>Gold Tier</td></tr>
+          <tr><td>33</td><td>Ada</td><td>Hodkiewicz</td><td>5057881598</td><td>Clyde_Davis63@gmail.com</td><td>2024-12-27</td><td>Gold Tier</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="card data-section" id="employees-data">
+      <div class="card-header"><h2>Employees</h2><p>5 sample records from the Employee table</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>First Name</th><th>Last Name</th><th>Phone</th><th>Email</th><th>Address</th><th>Salary</th></tr></thead>
+        <tbody>
+          <tr><td>Kelly</td><td>Monahan</td><td>5023488005</td><td>Wayne_Okuneva@gmail.com</td><td>386 Rodriguez Club</td><td>$67,992</td></tr>
+          <tr><td>Corey</td><td>Parker</td><td>1955626099</td><td>Frances.Miller@yahoo.com</td><td>4159 Ottis Light</td><td>$82,564</td></tr>
+          <tr><td>Yolanda</td><td>Carter</td><td>1476691968</td><td>Isaac.Paucek21@hotmail.com</td><td>383 Dayne Groves</td><td>$67,078</td></tr>
+          <tr><td>Vivian</td><td>Berge</td><td>6605909521</td><td>Virginia.Macejkovic73@hotmail.com</td><td>161 Stoltenberg Center</td><td>$98,014</td></tr>
+          <tr><td>Jeanette</td><td>Turcotte</td><td>7748166525</td><td>Randal_Hirthe35@hotmail.com</td><td>574 W Washington Street</td><td>$60,219</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="card data-section" id="trainers-data">
+      <div class="card-header"><h2>Trainers</h2><p>5 sample records from the Trainer table</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Employee ID</th><th>Join Date</th><th>Specialization</th><th>Certification</th></tr></thead>
+        <tbody>
+          <tr><td>18</td><td>2026-02-03</td><td>National Gym</td><td>Certification</td></tr>
+          <tr><td>37</td><td>2026-03-15</td><td>National Gym</td><td>Certification</td></tr>
+          <tr><td>3</td><td>2026-04-19</td><td>National Gym</td><td>Certification</td></tr>
+          <tr><td>49</td><td>2024-11-06</td><td>National Gym</td><td>Certification</td></tr>
+          <tr><td>30</td><td>2025-02-16</td><td>National Gym</td><td>Certification</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="card data-section" id="classes-data">
+      <div class="card-header"><h2>Classes</h2><p>5 sample records from the Class table</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Trainer ID</th><th>Class ID</th><th>Name</th><th>Time</th><th>Capacity</th><th>Room</th></tr></thead>
+        <tbody>
+          <tr><td>18</td><td>738</td><td>Ivory</td><td>43</td><td>22</td><td>Room 738</td></tr>
+          <tr><td>18</td><td>156</td><td>Magenta</td><td>45</td><td>31</td><td>Room 156</td></tr>
+          <tr><td>22</td><td>642</td><td>Azure</td><td>117</td><td>26</td><td>Room 642</td></tr>
+          <tr><td>19</td><td>729</td><td>Violet</td><td>92</td><td>37</td><td>Room 729</td></tr>
+          <tr><td>29</td><td>722</td><td>Maroon</td><td>106</td><td>2</td><td>Room 722</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="card data-section" id="enrollments-data">
+      <div class="card-header"><h2>Enrollments</h2><p>5 sample records from the Enrollment table</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Enrollment ID</th><th>Date</th><th>Attendance Status</th><th>Class ID</th></tr></thead>
+        <tbody>
+          <tr><td>34</td><td>2026-08-27</td><td>3</td><td>7</td></tr>
+          <tr><td>44</td><td>2026-02-18</td><td>1</td><td>2</td></tr>
+          <tr><td>34</td><td>2026-10-03</td><td>3</td><td>13</td></tr>
+          <tr><td>11</td><td>2026-07-18</td><td>1</td><td>3</td></tr>
+          <tr><td>50</td><td>2026-03-01</td><td>3</td><td>39</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="card data-section" id="plans-data">
+      <div class="card-header"><h2>Membership Plans</h2><p>5 member-plan assignments from the report</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Member ID</th><th>Plan ID</th><th>Monthly Cost</th><th>Duration</th><th>Benefits</th></tr></thead>
+        <tbody>
+          <tr><td>37</td><td>3</td><td>$30</td><td>31 days</td><td>Free Classes, Showers, T-Shirt</td></tr>
+          <tr><td>29</td><td>3</td><td>$30</td><td>31 days</td><td>Free Classes, Showers, T-Shirt</td></tr>
+          <tr><td>19</td><td>3</td><td>$30</td><td>31 days</td><td>Free Classes, Showers, T-Shirt</td></tr>
+          <tr><td>25</td><td>3</td><td>$30</td><td>31 days</td><td>Free Classes, Showers, T-Shirt</td></tr>
+          <tr><td>24</td><td>3</td><td>$30</td><td>31 days</td><td>Free Classes, Showers, T-Shirt</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section class="card data-section" id="payments-data">
+      <div class="card-header"><h2>Payments</h2><p>5 sample records from the Payment table</p></div>
+      <div class="table-wrapper"><table>
+        <thead><tr><th>Member ID</th><th>Payment ID</th><th>Amount</th><th>Method</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td>19</td><td>12</td><td>$15</td><td>Visa</td><td><span class="badge badge-success">Paid</span></td></tr>
+          <tr><td>15</td><td>13</td><td>$35</td><td>Mastercard</td><td><span class="badge badge-success">Paid</span></td></tr>
+          <tr><td>15</td><td>10</td><td>$83</td><td>Diners Club</td><td><span class="badge badge-success">Paid</span></td></tr>
+          <tr><td>14</td><td>7</td><td>$11</td><td>Discover</td><td><span class="badge badge-success">Paid</span></td></tr>
+          <tr><td>41</td><td>12</td><td>$60</td><td>Maestro</td><td><span class="badge badge-success">Paid</span></td></tr>
+        </tbody>
+      </table></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System - University Database Systems Project</span>
+      <span><a href="index.html">Back to dashboard &rarr;</a></span>
+    </div>
+  </footer>
+</body>
+</html>

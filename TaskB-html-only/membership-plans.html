@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-gray">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Create and manage membership plans in the FitCore Gym Management System." />
+  <title>Membership Plans | FitCore Gym Management System</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-container">
+      <a href="index.html" class="brand">
+        <span class="logo-mark">FC</span>
+        FitCore Gym Management
+      </a>
+      <nav class="main-nav" aria-label="Primary">
+        <a href="index.html">Dashboard</a>
+        <a href="members.html">Members</a>
+        <a href="employees.html">Employees</a>
+        <a href="trainers.html">Trainers</a>
+        <a href="membership-plans.html" class="active">Plans</a>
+        <a href="classes.html">Classes</a>
+        <a href="enrollment.html">Enrollment</a>
+        <a href="payments.html">Payments</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <h1 class="page-title">Add Membership Plan</h1>
+    <p class="page-subtitle">Define a plan with its pricing, duration, and included benefits.</p>
+
+    <div class="card">
+      <div class="card-header">
+        <h2>Plan Details</h2>
+        <p>Fields marked with an asterisk (*) are required.</p>
+      </div>
+      <form action="#" method="post">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="plan-id">Plan ID *</label>
+            <input type="text" id="plan-id" name="plan_id" placeholder="e.g. P-01" required />
+          </div>
+          <div class="form-group">
+            <label for="plan-name">Plan Name *</label>
+            <input type="text" id="plan-name" name="plan_name" placeholder="e.g. Premium" required />
+          </div>
+          <div class="form-group">
+            <label for="monthly-cost">Monthly Cost *</label>
+            <input type="number" id="monthly-cost" name="monthly_cost" min="0" step="0.01" placeholder="e.g. 79.00" required />
+          </div>
+          <div class="form-group">
+            <label for="duration">Duration *</label>
+            <input type="text" id="duration" name="duration" placeholder="e.g. 12 months" required />
+          </div>
+          <div class="form-group full">
+            <label for="benefits">Benefits *</label>
+            <textarea id="benefits" name="benefits" placeholder="e.g. Unlimited classes, personal trainer, sauna access, guest passes" required></textarea>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Submit</button>
+          <button type="reset" class="btn btn-secondary">Reset</button>
+        </div>
+      </form>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-container">
+      <span>&copy; 2026 FitCore Gym Management System — University Database Systems Project</span>
+      <span>Built with semantic HTML5 &amp; CSS</span>
+    </div>
+  </footer>
+</body>
+</html>
