@@ -92,4 +92,3 @@ CREATE TABLE payments (
     REFERENCES members(member_id)
     ON UPDATE CASCADE ON DELETE RESTRICT
 );
-
