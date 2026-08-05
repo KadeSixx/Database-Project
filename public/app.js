@@ -63,15 +63,24 @@ function feedback(form, message, type) {
   if (!element) {
     element = document.createElement("div");
     element.className = "form-feedback";
-    element.setAttribute("role", "status");
+    element.setAttribute("tabindex", "-1");
     form.prepend(element);
   }
+  element.setAttribute("role", type === "error" ? "alert" : "status");
+  element.setAttribute("aria-live", type === "error" ? "assertive" : "polite");
   element.className = `form-feedback ${type}`;
   element.textContent = message;
+  element.scrollIntoView({ behavior: "smooth", block: "center" });
+  element.focus({ preventScroll: true });
 }
 
 function showFieldErrors(form, errors) {
   form.querySelectorAll(".field-error").forEach((item) => item.remove());
+  form.querySelectorAll("[aria-invalid='true']").forEach((input) => {
+    input.removeAttribute("aria-invalid");
+    input.removeAttribute("aria-describedby");
+  });
+  let firstInvalidInput = null;
   for (const [field, message] of Object.entries(errors)) {
     const aliases = {
       plan_id: "membership_plan", trainer_id: "trainer",
@@ -81,9 +90,14 @@ function showFieldErrors(form, errors) {
     if (!input) continue;
     const error = document.createElement("small");
     error.className = "field-error";
+    error.id = `${input.id || input.name}-error`;
     error.textContent = message;
+    input.setAttribute("aria-invalid", "true");
+    input.setAttribute("aria-describedby", error.id);
     input.closest(".form-group")?.append(error);
+    firstInvalidInput ||= input;
   }
+  return firstInvalidInput;
 }
 
 async function populateSelect(select, entity, label) {
@@ -143,8 +157,13 @@ async function prepareForm() {
         location.assign(`/records.html?entity=${encodeURIComponent(entity)}&saved=1`);
       }, 650);
     } catch (error) {
-      showFieldErrors(form, error.fields);
-      feedback(form, error.detail ? `${error.message} ${error.detail}` : error.message, "error");
+      const invalidInput = showFieldErrors(form, error.fields);
+      const fieldMessages = [...new Set(Object.values(error.fields || {}))];
+      const message = fieldMessages.length
+        ? fieldMessages.join(" ")
+        : (error.detail ? `${error.message} ${error.detail}` : error.message);
+      feedback(form, message, "error");
+      if (invalidInput) window.setTimeout(() => invalidInput.focus(), 350);
     } finally {
       submit.disabled = false;
       submit.textContent = originalLabel;
