@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SQL Injection Demo</title>
+  <style>
+    body { font-family: sans-serif; padding: 2rem; background-color: #f3f4f6; }
+    .box { background: white; padding: 2rem; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+    input, button { padding: 0.5rem; font-size: 1rem; margin-top: 10px; display: block; width: 80%; margin-bottom: 10px; }
+    pre { background: #111827; color: #10b981; padding: 1rem; border-radius: 4px; overflow-x: auto; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <div class="box">
+    <h2>Task (a): Vulnerable Search Demo</h2>
+    <p>Member Search (You must enter both First Name and Last Name)</p>
+    
+    <!-- Form with 2 fields -->
+    <input type="text" id="fnameInput" placeholder="First Name (e.g. Jeff)">
+    <input type="text" id="lnameInput" placeholder="Last Name (e.g. Emmerich)">
+    <button onclick="attack()">Search</button>
+
+    <h3 style="margin-top: 2rem;">Executed SQL Query:</h3>
+    <pre id="queryOutput">Waiting for result...</pre>
+
+    <h3>Search Results:</h3>
+    <pre id="dataOutput">Waiting for result...</pre>
+  </div>
+
+  <script>
+    async function attack() {
+      const fname = document.getElementById("fnameInput").value;
+      const lname = document.getElementById("lnameInput").value;
+      const res = await fetch(`/api/vulnerable-search?fname=${encodeURIComponent(fname)}&lname=${encodeURIComponent(lname)}`);
+      const result = await res.json();
+      
+      document.getElementById("queryOutput").textContent = result.query_used || "Error";
+      document.getElementById("dataOutput").textContent = JSON.stringify(result.data || result, null, 2);
+    }
+  </script>
+</body>
+</html>
