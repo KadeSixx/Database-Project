@@ -1,6 +1,7 @@
 const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
+const crypto = require("node:crypto");
 const { DatabaseSync } = require("node:sqlite");
 
 const envFile = path.join(__dirname, ".env.local");
@@ -80,6 +81,32 @@ if (useMysql) {
     amount REAL NOT NULL CHECK(amount > 0), payment_method TEXT NOT NULL,
     payment_status TEXT NOT NULL CHECK(payment_status IN ('Paid','Pending','Failed'))
   );
+  -- ================================================================
+  -- ⚠ INTENTIONALLY VULNERABLE FOR PRACTICE — READ BEFORE COPYING ⚠
+  -- Passwords are stored in PLAIN TEXT and /api/auth/login below builds
+  -- its SQL with string concatenation instead of parameters, so it is
+  -- exploitable (e.g. username: admin, password: ' OR '1'='1). This was
+  -- left unprotected on purpose so the vulnerability can be studied and
+  -- then patched. Never do this in a real app:
+  --   - hash passwords (e.g. Node's crypto.scrypt) instead of storing them
+  --   - always use parameterized queries, exactly like every other query
+  --     in this file already does.
+  -- ================================================================
+  CREATE TABLE IF NOT EXISTS users (
+    user_id TEXT PRIMARY KEY,
+    username TEXT NOT NULL UNIQUE,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL CHECK(role IN ('admin','trainer','member')),
+    display_name TEXT NOT NULL,
+    member_id TEXT REFERENCES members(member_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    employee_id TEXT REFERENCES trainers(employee_id) ON UPDATE CASCADE ON DELETE CASCADE,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    CHECK (
+      (role = 'admin' AND member_id IS NULL AND employee_id IS NULL) OR
+      (role = 'trainer' AND employee_id IS NOT NULL AND member_id IS NULL) OR
+      (role = 'member' AND member_id IS NOT NULL AND employee_id IS NULL)
+    )
+  );
   `);
 
 function seed(table, columns, rows) {
@@ -138,6 +165,16 @@ function seed(table, columns, rows) {
   ["PAY-15-10", "M-47", 83, "Diners Club", "Paid"],
   ["PAY-14-07", "M-49", 11, "Discover", "Paid"],
   ["PAY-41-12", "M-33", 60, "Maestro", "Paid"],
+  ]);
+  // Demo login accounts. Passwords are plain text on purpose (see the
+  // warning above the `users` table) — these are throwaway local dev
+  // credentials only, never reuse them anywhere real.
+  seed("users", ["user_id", "username", "password", "role", "display_name", "member_id", "employee_id"], [
+  ["U-01", "admin", "admin123", "admin", "System Administrator", null, null],
+  ["U-02", "trainer1", "trainer123", "trainer", "Kelly Monahan", null, "E-18"],
+  ["U-03", "trainer2", "trainer123", "trainer", "Corey Parker", null, "E-37"],
+  ["U-04", "member1", "member123", "member", "Jeff Emmerich", "M-46", null],
+  ["U-05", "member2", "member123", "member", "Courtney O'Hara-Homenick", "M-22", null],
   ]);
 }
 
@@ -273,6 +310,254 @@ function validate(config, value) {
   return errors;
 }
 
+// ---------------------------------------------------------------------------
+// Authentication, sessions, and role-based permissions
+// ---------------------------------------------------------------------------
+
+const SESSION_COOKIE = "fitcore_session";
+const SESSION_TTL_MS = 8 * 60 * 60 * 1000; // 8 hours, sliding expiration
+const sessions = new Map(); // token -> { user, expires }
+
+function parseCookies(req) {
+  const cookies = {};
+  const header = req.headers.cookie;
+  if (!header) return cookies;
+  for (const part of header.split(";")) {
+    const index = part.indexOf("=");
+    if (index === -1) continue;
+    cookies[part.slice(0, index).trim()] = decodeURIComponent(part.slice(index + 1).trim());
+  }
+  return cookies;
+}
+
+function currentUser(req) {
+  const token = parseCookies(req)[SESSION_COOKIE];
+  if (!token) return null;
+  const session = sessions.get(token);
+  if (!session || session.expires < Date.now()) {
+    sessions.delete(token);
+    return null;
+  }
+  session.expires = Date.now() + SESSION_TTL_MS;
+  return session.user;
+}
+
+function startSession(res, user) {
+  const token = crypto.randomBytes(32).toString("hex");
+  sessions.set(token, { user, expires: Date.now() + SESSION_TTL_MS });
+  res.setHeader(
+    "Set-Cookie",
+    `${SESSION_COOKIE}=${token}; HttpOnly; Path=/; SameSite=Lax; Max-Age=${SESSION_TTL_MS / 1000}`
+  );
+}
+
+function endSession(req, res) {
+  const token = parseCookies(req)[SESSION_COOKIE];
+  if (token) sessions.delete(token);
+  res.setHeader("Set-Cookie", `${SESSION_COOKIE}=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0`);
+}
+
+// Row-level scoping applied to list queries for non-admin roles. Each clause
+// references the table alias used in that entity's `list` query.
+const SCOPE = {
+  members: { member: { clause: "m.member_id = ?", params: (u) => [u.memberId] } },
+  enrollments: {
+    trainer: {
+      clause: "x.class_id IN (SELECT class_id FROM classes WHERE trainer_id = ?)",
+      params: (u) => [u.employeeId],
+    },
+    member: { clause: "x.member_id = ?", params: (u) => [u.memberId] },
+  },
+  payments: { member: { clause: "p.member_id = ?", params: (u) => [u.memberId] } },
+};
+
+// Confirms a signed-in trainer/member owns (or may act on) a specific record.
+// Admins always pass. Roles/entities with no ownership rule also pass, since
+// the capability check already gated access for them.
+async function ownerCheck(entity, id, user) {
+  if (user.role === "admin") return true;
+  if (entity === "members" && user.role === "member") return id === user.memberId;
+  if (entity === "enrollments" && (user.role === "member" || user.role === "trainer")) {
+    const row = await dbGet(`SELECT member_id, class_id FROM enrollments WHERE enrollment_id=?`, [id]);
+    if (!row) return false;
+    if (user.role === "member") return row.member_id === user.memberId;
+    const cls = await dbGet(`SELECT trainer_id FROM classes WHERE class_id=?`, [row.class_id]);
+    return !!cls && cls.trainer_id === user.employeeId;
+  }
+  if (entity === "payments" && user.role === "member") {
+    const row = await dbGet(`SELECT member_id FROM payments WHERE payment_id=?`, [id]);
+    return !!row && row.member_id === user.memberId;
+  }
+  if (entity === "classes" && user.role === "trainer") {
+    const row = await dbGet(`SELECT trainer_id FROM classes WHERE class_id=?`, [id]);
+    return !!row && row.trainer_id === user.employeeId;
+  }
+  return true;
+}
+
+// Per-role CRUD capabilities for every entity. `editableFields`, when
+// present, restricts which columns a PUT may change for that role.
+function capabilitiesFor(user) {
+  const full = { read: true, create: true, update: true, delete: true };
+  const none = { read: false, create: false, update: false, delete: false };
+  if (user.role === "admin") {
+    return Object.fromEntries(Object.keys(entities).map((name) => [name, { ...full }]));
+  }
+  if (user.role === "trainer") {
+    return {
+      plans: { read: true, create: false, update: false, delete: false },
+      members: { read: true, create: false, update: false, delete: false },
+      employees: { ...none },
+      trainers: { read: true, create: false, update: false, delete: false },
+      classes: {
+        read: true, create: false, delete: false, update: true,
+        editableFields: ["class_name", "class_time", "capacity", "room_location"],
+      },
+      enrollments: { read: true, create: false, update: true, delete: false, editableFields: ["attendance_status"] },
+      payments: { ...none },
+    };
+  }
+  if (user.role === "member") {
+    return {
+      plans: { read: true, create: false, update: false, delete: false },
+      members: { read: true, create: false, update: false, delete: false },
+      employees: { ...none },
+      trainers: { read: true, create: false, update: false, delete: false },
+      classes: { read: true, create: false, update: false, delete: false },
+      enrollments: { read: true, create: true, update: false, delete: true },
+      payments: { read: true, create: false, update: false, delete: false },
+    };
+  }
+  return Object.fromEntries(Object.keys(entities).map((name) => [name, { ...none }]));
+}
+
+// ⚠ INTENTIONALLY VULNERABLE TO SQL INJECTION — practice/learning only ⚠
+// Unlike every other query in this file, this one is built by concatenating
+// user input directly into the SQL string instead of using `?` placeholders.
+// That means the username/password fields aren't just data to the database —
+// they can inject their own SQL. Try logging in with:
+//   username: admin
+//   password: ' OR '1'='1
+// ...and the WHERE clause becomes always-true, logging you in as the first
+// matching user without knowing the real password. Once you've explored
+// this (e.g. also try `' OR role='admin' --` in the username field to log
+// in as an admin without any password), fix it by switching back to a
+// parameterized query, like `dbGet("SELECT * FROM users WHERE username=? AND
+// password=?", [username, password])`.
+async function handleLogin(req, res) {
+  const body = await readJson(req);
+  const username = String(body.username || "").trim();
+  const password = String(body.password || "");
+  if (!username || !password) return json(res, 400, { error: "Enter a username and password." });
+
+  const sql = `SELECT * FROM users WHERE username='${username}' AND password='${password}'`;
+  let row;
+  if (useMysql) {
+    const [rows] = await pool.query(sql);
+    row = rows[0];
+  } else {
+    row = db.prepare(sql).get();
+  }
+  if (!row) {
+    return json(res, 401, { error: "Incorrect username or password." });
+  }
+
+  const user = {
+    userId: row.user_id,
+    username: row.username,
+    role: row.role,
+    displayName: row.display_name,
+    memberId: row.member_id,
+    employeeId: row.employee_id,
+  };
+  startSession(res, user);
+  return json(res, 200, { user, capabilities: capabilitiesFor(user) });
+}
+
+async function handleLogout(req, res) {
+  endSession(req, res);
+  return json(res, 200, { message: "Signed out." });
+}
+
+async function handleMe(req, res) {
+  const user = currentUser(req);
+  if (!user) return json(res, 401, { error: "Not signed in." });
+  return json(res, 200, { user, capabilities: capabilitiesFor(user) });
+}
+
+async function handleListUsers(res) {
+  const rows = await dbAll(
+    `SELECT user_id, username, role, display_name, member_id, employee_id FROM users ORDER BY user_id`
+  );
+  return json(res, 200, rows);
+}
+
+async function handleCreateUser(req, res) {
+  const body = await readJson(req);
+  const value = {
+    user_id: String(body.user_id || "").trim(),
+    username: String(body.username || "").trim(),
+    password: String(body.password || ""),
+    role: String(body.role || ""),
+    display_name: String(body.display_name || "").trim(),
+    member_id: body.member_id ? String(body.member_id).trim() : null,
+    employee_id: body.employee_id ? String(body.employee_id).trim() : null,
+  };
+
+  const errors = {};
+  if (!value.user_id) errors.user_id = "This field is required.";
+  if (!value.username) errors.username = "This field is required.";
+  if (!value.password || value.password.length < 8) errors.password = "Use at least 8 characters.";
+  if (!["admin", "trainer", "member"].includes(value.role)) errors.role = "Choose a valid role.";
+  if (!value.display_name) errors.display_name = "This field is required.";
+  if (value.role === "trainer" && !value.employee_id) errors.employee_id = "Select the trainer's employee record.";
+  if (value.role === "member" && !value.member_id) errors.member_id = "Select the member's record.";
+  if (value.role === "admin" && (value.member_id || value.employee_id)) {
+    errors.role = "Admin accounts should not be linked to a member or trainer record.";
+  }
+  if (Object.keys(errors).length) return json(res, 422, { error: "Validation failed.", fields: errors });
+
+  if (value.role === "trainer" && !(await dbGet(`SELECT 1 FROM trainers WHERE employee_id=?`, [value.employee_id]))) {
+    return json(res, 422, { error: "Validation failed.", fields: { employee_id: "That employee is not registered as a trainer." } });
+  }
+  if (value.role === "member" && !(await dbGet(`SELECT 1 FROM members WHERE member_id=?`, [value.member_id]))) {
+    return json(res, 422, { error: "Validation failed.", fields: { member_id: "That member record does not exist." } });
+  }
+
+  // Account-creation stays parameterized (only /api/auth/login is the
+  // deliberately vulnerable one) — but the password is still stored in
+  // plain text, matching the `users` table's practice-only design.
+  try {
+    await dbRun(
+      `INSERT INTO users (user_id, username, password, role, display_name, member_id, employee_id)
+       VALUES (?,?,?,?,?,?,?)`,
+      [
+        value.user_id, value.username, value.password, value.role, value.display_name,
+        value.role === "member" ? value.member_id : null,
+        value.role === "trainer" ? value.employee_id : null,
+      ]
+    );
+  } catch (error) {
+    if (error.code === "ER_DUP_ENTRY" || /UNIQUE constraint failed/i.test(error.message)) {
+      const field = /username/i.test(error.message) ? "username" : "user_id";
+      return json(res, 409, {
+        error: "Please correct the highlighted field.",
+        fields: { [field]: field === "username" ? "That username is already taken." : "That User ID already exists." },
+      });
+    }
+    throw error;
+  }
+  return json(res, 201, { message: "User account created.", id: value.user_id });
+}
+
+async function handleDeleteUser(res, targetId, requester) {
+  if (targetId === requester.userId) return json(res, 400, { error: "You cannot delete the account you're signed in as." });
+  const result = await dbRun(`DELETE FROM users WHERE user_id=?`, [targetId]);
+  return result.changes
+    ? json(res, 200, { message: "User account deleted." })
+    : json(res, 404, { error: "User not found." });
+}
+
 function json(res, status, body) {
   res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
@@ -291,15 +576,44 @@ async function readJson(req) {
 }
 
 async function api(req, res, url) {
+  // Auth routes are the only ones reachable without an existing session.
+  if (url.pathname === "/api/auth/login" && req.method === "POST") return handleLogin(req, res);
+  if (url.pathname === "/api/auth/logout" && req.method === "POST") return handleLogout(req, res);
+  if (url.pathname === "/api/auth/me" && req.method === "GET") return handleMe(req, res);
+
+  const user = currentUser(req);
+  if (!user) return json(res, 401, { error: "Please sign in to continue." });
+
   if (url.pathname === "/api/dashboard" && req.method === "GET") {
     const result = {};
     for (const [name, config] of Object.entries(entities)) {
+      if (name === "employees" && user.role !== "admin") continue;
       result[name] = (await dbGet(`SELECT COUNT(*) AS count FROM ${config.table}`)).count;
     }
-    result.revenue = (await dbGet(
-      "SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE payment_status='Paid'"
-    )).total;
+    if (user.role === "admin") {
+      result.revenue = (await dbGet(
+        "SELECT COALESCE(SUM(amount),0) AS total FROM payments WHERE payment_status='Paid'"
+      )).total;
+    }
     return json(res, 200, result);
+  }
+
+  if (url.pathname === "/api/users" && req.method === "GET") {
+    if (user.role !== "admin") return json(res, 403, { error: "Admins only." });
+    return handleListUsers(res);
+  }
+  if (url.pathname === "/api/users" && req.method === "POST") {
+    if (user.role !== "admin") return json(res, 403, { error: "Admins only." });
+    try {
+      return await handleCreateUser(req, res);
+    } catch (error) {
+      return json(res, 500, { error: "The database operation failed.", detail: error.message });
+    }
+  }
+  const userMatch = url.pathname.match(/^\/api\/users\/([^/]+)$/);
+  if (userMatch && req.method === "DELETE") {
+    if (user.role !== "admin") return json(res, 403, { error: "Admins only." });
+    return handleDeleteUser(res, decodeURIComponent(userMatch[1]), user);
   }
 
   const match = url.pathname.match(/^\/api\/([a-z]+)(?:\/([^/]+))?$/);
@@ -307,20 +621,55 @@ async function api(req, res, url) {
   const [entity, encodedId] = [match[1], match[2]];
   const config = entities[entity];
   const id = encodedId ? decodeURIComponent(encodedId) : null;
+  const caps = capabilitiesFor(user)[entity] || { read: false, create: false, update: false, delete: false };
 
   try {
     if (req.method === "GET") {
+      if (!caps.read) return json(res, 403, { error: "You don't have permission to view this data." });
       if (id) {
+        if (!(await ownerCheck(entity, id, user))) {
+          return json(res, 403, { error: "You don't have permission to view this record." });
+        }
         const record = await dbGet(
           `SELECT * FROM ${config.table} WHERE ${config.id}=?`, [id]
         );
         return record ? json(res, 200, record) : json(res, 404, { error: "Record not found." });
       }
-      return json(res, 200, await dbAll(config.list || `SELECT * FROM ${config.table}`));
+      const base = config.list || `SELECT * FROM ${config.table}`;
+      const scope = SCOPE[entity]?.[user.role];
+      const sql = scope ? base.replace(/ORDER BY/i, `WHERE ${scope.clause} ORDER BY`) : base;
+      const params = scope ? scope.params(user) : [];
+      return json(res, 200, await dbAll(sql, params));
     }
 
     if (req.method === "POST" || req.method === "PUT") {
-      const value = normalize(entity, await readJson(req));
+      if (req.method === "POST" && !caps.create) {
+        return json(res, 403, { error: "You don't have permission to create this record." });
+      }
+      if (req.method === "PUT" && !caps.update) {
+        return json(res, 403, { error: "You don't have permission to update this record." });
+      }
+      if (req.method === "PUT" && id && !(await ownerCheck(entity, id, user))) {
+        return json(res, 403, { error: "You don't have permission to modify this record." });
+      }
+
+      let value = normalize(entity, await readJson(req));
+
+      // Members may only ever enroll themselves, regardless of what the form sent.
+      if (req.method === "POST" && entity === "enrollments" && user.role === "member") {
+        value.member_id = user.memberId;
+      }
+
+      // Roles with a restricted edit surface (e.g. trainers marking attendance)
+      // may only change the listed fields; everything else keeps its current value.
+      if (req.method === "PUT" && caps.editableFields) {
+        const existing = await dbGet(`SELECT * FROM ${config.table} WHERE ${config.id}=?`, [id]);
+        if (!existing) return json(res, 404, { error: "Record not found." });
+        const merged = { ...existing };
+        for (const field of caps.editableFields) if (field in value) merged[field] = value[field];
+        value = merged;
+      }
+
       const errors = validate(config, value);
       if (Object.keys(errors).length) return json(res, 422, { error: "Validation failed.", fields: errors });
 
@@ -345,7 +694,11 @@ async function api(req, res, url) {
     }
 
     if (req.method === "DELETE") {
+      if (!caps.delete) return json(res, 403, { error: "You don't have permission to delete this record." });
       if (!id) return json(res, 400, { error: "Record ID is required." });
+      if (!(await ownerCheck(entity, id, user))) {
+        return json(res, 403, { error: "You don't have permission to delete this record." });
+      }
       const result = await dbRun(
         `DELETE FROM ${config.table} WHERE ${config.id}=?`, [id]
       );
