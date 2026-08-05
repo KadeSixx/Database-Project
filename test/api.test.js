@@ -97,6 +97,65 @@ test("identifies duplicate member IDs", async () => {
   assert.equal(body.fields.member_id, "That Member ID already exists.");
 });
 
+test("allows different members to share a phone number", async () => {
+  const sharedPhone = "5557771212";
+  const members = [
+    {
+      member_id: "M-PHONE-A", first_name: "Alex", last_name: "Household",
+      phone: sharedPhone, email: "alex.household@example.com",
+      join_date: "2026-08-05", plan_id: "P-03",
+    },
+    {
+      member_id: "M-PHONE-B", first_name: "Blair", last_name: "Household",
+      phone: sharedPhone, email: "blair.household@example.com",
+      join_date: "2026-08-05", plan_id: "P-03",
+    },
+  ];
+  for (const member of members) {
+    const response = await fetch(`${base}/api/members`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(member),
+    });
+    assert.equal(response.status, 201);
+  }
+  const records = await (await fetch(`${base}/api/members`)).json();
+  assert.equal(records.filter((record) => record.phone === sharedPhone).length, 2);
+  for (const member of members) {
+    await fetch(`${base}/api/members/${member.member_id}`, { method: "DELETE" });
+  }
+});
+
+test("rejects duplicate employee IDs while allowing shared phone numbers", async () => {
+  const sharedPhone = "5558883434";
+  const first = {
+    employee_id: "E-PHONE-A", first_name: "Casey", last_name: "Household",
+    phone: sharedPhone, email: "casey.employee@example.com",
+    address: "1 Shared Street", salary: 50000,
+  };
+  const second = {
+    employee_id: "E-PHONE-B", first_name: "Devon", last_name: "Household",
+    phone: sharedPhone, email: "devon.employee@example.com",
+    address: "1 Shared Street", salary: 50000,
+  };
+  for (const employee of [first, second]) {
+    const response = await fetch(`${base}/api/employees`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(employee),
+    });
+    assert.equal(response.status, 201);
+  }
+  const duplicate = await fetch(`${base}/api/employees`, {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...second, email: "another.employee@example.com" }),
+  });
+  const duplicateBody = await duplicate.json();
+  assert.equal(duplicate.status, 409);
+  assert.equal(duplicateBody.fields.employee_id, "That Employee ID already exists.");
+  for (const employee of [first, second]) {
+    await fetch(`${base}/api/employees/${employee.employee_id}`, { method: "DELETE" });
+  }
+});
+
 test("deleting a member also removes dependent payments", async () => {
   const member = {
     member_id: "M-CASCADE", first_name: "Cascade", last_name: "Test",

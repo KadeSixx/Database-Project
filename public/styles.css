@@ -531,6 +531,13 @@ tbody tr:last-child td {
   font-size: 0.8rem;
 }
 
+.field-hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--gray-500);
+  font-size: 0.8rem;
+}
+
 .record-tabs button {
   padding: 0.45rem 0.8rem;
   border: 1px solid var(--gray-300);
