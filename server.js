@@ -415,9 +415,30 @@ function staticFile(req, res, url) {
     res.end(content);
   });
 }
-
+async function vulnerableApi(req, res, url) {
+  if (url.pathname === "/api/vulnerable-search" && req.method === "GET") {
+    const firstName = url.searchParams.get("fname") || "";
+    const lastName = url.searchParams.get("lname") || "";
+    const query = `SELECT * FROM members WHERE first_name = '${firstName}' AND last_name = '${lastName}'`;
+    try {
+      let result;
+      if (useMysql) {
+        const [rows] = await pool.query(query); 
+        result = rows;
+      } else {
+        result = db.prepare(query).all();
+      }
+      return json(res, 200, { query_used: query, data: result });
+    } catch (error) {
+      return json(res, 500, { error: error.message });
+    }
+  }
+}
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+if (url.pathname === "/api/vulnerable-search") {
+    return await vulnerableApi(req, res, url);
+  }
   if (url.pathname.startsWith("/api/")) {
     try {
       return await api(req, res, url);
